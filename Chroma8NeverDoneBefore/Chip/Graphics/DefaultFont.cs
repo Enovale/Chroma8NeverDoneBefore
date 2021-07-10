@@ -1,4 +1,4 @@
-﻿namespace Chroma8NeverDoneBefore.Chip8.Graphics
+﻿namespace Chroma8NeverDoneBefore.Chip.Graphics
 {
     public static class DefaultFont
     {

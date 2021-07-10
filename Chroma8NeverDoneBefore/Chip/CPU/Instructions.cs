@@ -1,4 +1,4 @@
-﻿namespace Chroma8NeverDoneBefore.Chip8.CPU
+﻿namespace Chroma8NeverDoneBefore.Chip.CPU
 {
     public static class Instructions
     {

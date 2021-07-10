@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Chroma8NeverDoneBefore.Chip8
+namespace Chroma8NeverDoneBefore.Chip
 {
     public class MemoryController
     {
@@ -12,6 +12,8 @@ namespace Chroma8NeverDoneBefore.Chip8
             _context = context;
             Tape = new byte[1024 * 4];
         }
+
+        public void Clear() => Tape = new byte[Tape.Length];
 
         public byte Read(ushort position) => Tape[position];
         public byte[] ReadRange(Range range) => Tape[range];

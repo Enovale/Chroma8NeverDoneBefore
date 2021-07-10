@@ -1,4 +1,4 @@
-﻿namespace Chroma8NeverDoneBefore.Chip8
+﻿namespace Chroma8NeverDoneBefore.Chip
 {
     public class InputHandler
     {
