@@ -2,6 +2,8 @@
 {
     public static class DefaultFont
     {
+        public const ushort FontOffset = 0x00;
+        
         public static readonly byte[][] HexChars = new byte[][]
         {
             new byte[] {0xF0, 0x90, 0x90, 0x90, 0xF0}, // Zero

@@ -1,4 +1,4 @@
-﻿namespace Chroma8NeverDoneBefore.Chip8
+﻿namespace Chroma8NeverDoneBefore.Chip8.CPU
 {
     public class Processor
     {
@@ -9,10 +9,18 @@
         public ushort StackPointer;
         public ushort[] Stack;
 
-        public Processor()
+        private Chip8 _context;
+
+        public Processor(Chip8 context)
         {
+            _context = context;
             Registers = new byte[16];
             Stack = new ushort[16];
+        }
+
+        public void Clock()
+        {
+            
         }
     }
 }
