@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using Chroma8NeverDoneBefore.Helpers;
 
@@ -32,9 +31,11 @@ namespace Chroma8NeverDoneBefore.Chip
         public void Clock()
         {
             var instruction = _context.Memory.ReadUShort(ProgramCounter);
+            // Make sure we're always working with big endian
+            instruction = (BitConverter.IsLittleEndian ? instruction.SwapBytes() : instruction);
 
             // I hate this a lot again
-            var str = instruction.SwapBytes().ToString("X4");
+            var str = instruction.ToString("X4");
             
             var methods = this.GetType().GetMethods(BindingFlags.Public
                                                     | BindingFlags.NonPublic 
@@ -73,11 +74,47 @@ namespace Chroma8NeverDoneBefore.Chip
         {
             throw new NotImplementedException();
         }
+        
+        [Instruction("1nnn")]
+        public void SetProgramCounter(ushort instruction)
+        {
+            ProgramCounter = (ushort) (instruction & 0x0FFF);
+        }
+        
+        [Instruction("2nnn")]
+        public void CallSubroutine(ushort instruction)
+        {
+            StackPointer++;
+            Stack[StackPointer] = ProgramCounter;
+            ProgramCounter = (ushort) (instruction & 0x0FFF);
+        }
+
+        [Instruction("3xkk")]
+        public void SkipIfEqual(ushort instruction)
+        {
+            var r = (byte) ((instruction & 0x0F00) >> 8);
+            if (Registers[r] == (byte) (instruction & 0x00FF))
+                ProgramCounter += 2;
+        }
 
         [Instruction("6xkk")]
         public void LoadRegister(ushort instruction)
         {
-            throw new NotImplementedException();
+            var r = (byte) ((instruction & 0x0F00) >> 8);
+            Registers[r] = (byte) (instruction & 0x00FF);
+        }
+
+        [Instruction("7xkk")]
+        public void AddRegister(ushort instruction)
+        {
+            var r = (byte) ((instruction & 0x0F00) >> 8);
+            Registers[r] = (byte) (Registers[r] + (byte) (instruction & 0x00FF));
+        }
+
+        [Instruction("Annn")]
+        public void LoadAddress(ushort instruction)
+        {
+            MemRegister = (ushort) (instruction & 0x0FFF);
         }
     }
 }
