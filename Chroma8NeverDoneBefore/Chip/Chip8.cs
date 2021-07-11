@@ -10,6 +10,7 @@ namespace Chroma8NeverDoneBefore.Chip
         public AudioModule Audio;
         public InputHandler Input;
         public Renderer Renderer;
+        public ushort ProgramOffset;
 
         public Chip8()
         {
@@ -22,11 +23,12 @@ namespace Chroma8NeverDoneBefore.Chip
 
         public void Load(byte[] data)
         {
+            ProgramOffset = 0x200;
             Memory.Clear();
 
             Renderer.Initialize();
-            Memory.SetRange(0x200, data);
-            Processor.Initialize(0x200);
+            Memory.SetRange(ProgramOffset, data);
+            Processor.Initialize(ProgramOffset);
         }
 
         public void LoadFile(string path) => Load(File.ReadAllBytes(path));

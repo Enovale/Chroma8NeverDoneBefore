@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Linq;
+using Chroma8NeverDoneBefore.Helpers;
 
 namespace Chroma8NeverDoneBefore.Chip.Graphics
 {
@@ -38,13 +39,13 @@ namespace Chroma8NeverDoneBefore.Chip.Graphics
             var offsetY = _context.Processor.Registers[rY];
             for (var y = 0; y < n; y++)
             {
-                var line = _context.Memory.Read((ushort) (_context.Processor.MemRegister + y));
-                var array = new BitArray(line);
-                for (var x = 0; x < array.Count; x++)
+                var line = _context.Memory.Read((ushort) (_context.Processor.MemRegister + y)).SwapBytes();
+                for (var x = 0; x < 8; x++)
                 {
-                    if (FrameBuffer[offsetX + x, offsetY + y] != array[x])
+                    var value = (line & (1 << x-1)) != 0;
+                    if (FrameBuffer[offsetX + x, offsetY + y] != value)
                         _context.Processor.Registers[0xF] = 0x01;
-                    FrameBuffer[offsetX + x, offsetY + y] = array[x];
+                    FrameBuffer[offsetX + x, offsetY + y] = value;
                 }
             }
         }

@@ -36,10 +36,10 @@ namespace Chroma8NeverDoneBefore.Chip
 
             // I hate this a lot again
             var str = instruction.ToString("X4");
-            
+
             var methods = this.GetType().GetMethods(BindingFlags.Public
-                                                    | BindingFlags.NonPublic 
-                                                    | BindingFlags.Instance 
+                                                    | BindingFlags.NonPublic
+                                                    | BindingFlags.Instance
                                                     | BindingFlags.Static);
             foreach (var info in methods)
             {
@@ -58,7 +58,7 @@ namespace Chroma8NeverDoneBefore.Chip
                         }
                     }
 
-                    if(!failed)
+                    if (!failed)
                     {
                         info.Invoke(this, new object[] {instruction});
                         if (attr.IncrementPc)
@@ -74,13 +74,13 @@ namespace Chroma8NeverDoneBefore.Chip
         {
             throw new NotImplementedException();
         }
-        
+
         [Instruction("1nnn")]
         public void SetProgramCounter(ushort instruction)
         {
             ProgramCounter = (ushort) (instruction & 0x0FFF);
         }
-        
+
         [Instruction("2nnn")]
         public void CallSubroutine(ushort instruction)
         {
@@ -115,6 +115,16 @@ namespace Chroma8NeverDoneBefore.Chip
         public void LoadAddress(ushort instruction)
         {
             MemRegister = (ushort) (instruction & 0x0FFF);
+        }
+
+        [Instruction("Dxyn")]
+        public void DrawSprite(ushort instruction)
+        {
+            _context.Renderer.DrawSprite(
+                (byte) ((instruction & 0x0F00) >> 8),
+                (byte) ((instruction & 0x00F0) >> 4),
+                (byte) (instruction & 0x000F)
+            );
         }
     }
 }
