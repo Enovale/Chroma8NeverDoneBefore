@@ -33,19 +33,26 @@ namespace Chroma8NeverDoneBefore.Chip.Graphics
             return (ushort) (DefaultFont.HexChars.Length * DefaultFont.HexChars.First().Length);
         }
 
+        public void Clear()
+        {
+            FrameBuffer = new bool[ScreenWidth, ScreenHeight];
+        }
+
         public void DrawSprite(byte rX, byte rY, byte n)
         {
             var offsetX = _context.Processor.Registers[rX];
             var offsetY = _context.Processor.Registers[rY];
             for (var y = 0; y < n; y++)
             {
-                var line = _context.Memory.Read((ushort) (_context.Processor.MemRegister + y)).SwapBytes();
+                var line = _context.Memory.Read((ushort) (_context.Processor.MemRegister + y));
                 for (var x = 0; x < 8; x++)
                 {
-                    var value = (line & (1 << x-1)) != 0;
-                    if (FrameBuffer[offsetX + x, offsetY + y] != value)
+                    var posX = (offsetX + x) % ScreenWidth;
+                    var posY = (offsetY + y) % ScreenHeight;
+                    var value = ((line << x) & 0x80) != 0;
+                    if (FrameBuffer[posX, posY] != value)
                         _context.Processor.Registers[0xF] = 0x01;
-                    FrameBuffer[offsetX + x, offsetY + y] = value;
+                    FrameBuffer[posX, posY] ^= value;
                 }
             }
         }

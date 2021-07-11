@@ -16,6 +16,7 @@ namespace Chroma8NeverDoneBefore.Chip
         public void Clear() => Tape = new byte[Tape.Length];
 
         public byte Read(ushort position) => Tape[position];
+        public byte ReadRelative(ushort position) => Tape[_context.ProgramOffset + position];
         public byte[] ReadRange(Range range) => Tape[range];
         public ushort ReadUShort(ushort position) => BitConverter.ToUInt16(Tape, position);
         public uint ReadUInt(ushort position) => BitConverter.ToUInt32(Tape, position);
