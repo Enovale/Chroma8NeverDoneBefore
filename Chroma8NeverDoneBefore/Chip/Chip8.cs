@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using Chroma8NeverDoneBefore.Chip.CPU;
 using Chroma8NeverDoneBefore.Chip.Graphics;
 
 namespace Chroma8NeverDoneBefore.Chip

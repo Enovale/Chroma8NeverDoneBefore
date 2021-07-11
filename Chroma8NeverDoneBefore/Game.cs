@@ -11,6 +11,7 @@ namespace Chroma8NeverDoneBefore
         public Game(GameStartupOptions options = null) : base(options)
         {
             _system = new Chip8();
+            _system.LoadFile(@"D:\Documents\GitHub\Chroma8NeverDoneBefore\Chroma8NeverDoneBefore\ROMs\Breakout (Brix hack) [David Winter, 1997].ch8");
         }
 
         protected override void Draw(RenderContext context)
