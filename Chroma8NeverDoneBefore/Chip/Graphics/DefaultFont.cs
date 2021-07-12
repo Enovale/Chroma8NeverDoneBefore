@@ -3,6 +3,7 @@
     public static class DefaultFont
     {
         public const ushort FontOffset = 0x00;
+        public const ushort FontSize = sizeof(byte) * 5;
         
         public static readonly byte[][] HexChars = new byte[][]
         {

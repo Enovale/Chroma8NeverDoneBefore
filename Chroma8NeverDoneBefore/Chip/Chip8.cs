@@ -12,8 +12,11 @@ namespace Chroma8NeverDoneBefore.Chip
         public Renderer Renderer;
         public ushort ProgramOffset;
 
-        public Chip8()
+        private IPlatform _platform;
+
+        public Chip8(IPlatform plat)
         {
+            _platform = plat;
             Processor = new Processor(this);
             Memory = new MemoryController(this);
             Audio = new AudioModule(this);
@@ -27,6 +30,7 @@ namespace Chroma8NeverDoneBefore.Chip
             Memory.Clear();
 
             Renderer.Initialize();
+            Input.Initialize(_platform);
             Memory.SetRange(ProgramOffset, data);
             Processor.Initialize(ProgramOffset);
         }

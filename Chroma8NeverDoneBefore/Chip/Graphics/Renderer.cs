@@ -26,11 +26,11 @@ namespace Chroma8NeverDoneBefore.Chip.Graphics
             
             for (var i = 0; i < DefaultFont.HexChars.Length; i++)
             {
-                _context.Memory.SetRange((ushort) (DefaultFont.FontOffset + i * DefaultFont.HexChars[i].Length),
+                _context.Memory.SetRange((ushort) (DefaultFont.FontOffset + i * DefaultFont.FontSize),
                     DefaultFont.HexChars[i]);
             }
 
-            return (ushort) (DefaultFont.HexChars.Length * DefaultFont.HexChars.First().Length);
+            return (ushort) (DefaultFont.HexChars.Length * DefaultFont.FontSize);
         }
 
         public void Clear()
@@ -42,6 +42,7 @@ namespace Chroma8NeverDoneBefore.Chip.Graphics
         {
             var offsetX = _context.Processor.Registers[rX];
             var offsetY = _context.Processor.Registers[rY];
+            var collision = false;
             for (var y = 0; y < n; y++)
             {
                 var line = _context.Memory.Read((ushort) (_context.Processor.MemRegister + y));
@@ -49,12 +50,15 @@ namespace Chroma8NeverDoneBefore.Chip.Graphics
                 {
                     var posX = (offsetX + x) % ScreenWidth;
                     var posY = (offsetY + y) % ScreenHeight;
+                    var old = FrameBuffer[posX, posY];
                     var value = ((line << x) & 0x80) != 0;
-                    if (FrameBuffer[posX, posY] != value)
-                        _context.Processor.Registers[0xF] = 0x01;
                     FrameBuffer[posX, posY] ^= value;
+                    if (old && !FrameBuffer[posX, posY])
+                        collision = true;
                 }
             }
+
+            _context.Processor.Registers[0xF] = (byte) (collision ? 0x01 : 0x00);
         }
     }
 }

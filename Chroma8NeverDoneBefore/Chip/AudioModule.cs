@@ -19,6 +19,7 @@ namespace Chroma8NeverDoneBefore.Chip
 
         public void Update(float deltaTime)
         {
+            deltaTime *= 1000;
             deltaTime += LeftoverTimer;
             LeftoverTimer = deltaTime % 60;
 

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
+using Chroma8NeverDoneBefore.Chip.Graphics;
 using Chroma8NeverDoneBefore.Helpers;
 
 namespace Chroma8NeverDoneBefore.Chip
@@ -84,7 +86,7 @@ namespace Chroma8NeverDoneBefore.Chip
             StackPointer--;
         }
 
-        [Instruction("1nnn")]
+        [Instruction("1nnn", false)]
         public void SetProgramCounter(ushort instruction)
         {
             ProgramCounter = (ushort) (instruction & 0x0FFF);
@@ -183,8 +185,8 @@ namespace Chroma8NeverDoneBefore.Chip
         {
             var x = (byte) ((instruction & 0x0F00) >> 8);
             var y = (byte) ((instruction & 0x00F0) >> 4);
-            Registers[x] = (byte) (Registers[x] - Registers[y]);
             Registers[0xF] = Registers[x] > Registers[y] ? (byte) 0x1 : (byte) 0x0;
+            Registers[x] = (byte) (Registers[x] - Registers[y]);
         }
 
         [Instruction("8xy6")]
@@ -192,8 +194,8 @@ namespace Chroma8NeverDoneBefore.Chip
         {
             var x = (byte) ((instruction & 0x0F00) >> 8);
             var y = (byte) ((instruction & 0x00F0) >> 4);
+            Registers[0xF] = (Registers[x] & 0x01) != 0 ? (byte) 0x1 : (byte) 0x0;
             Registers[x] = (byte) (Registers[x] / 2);
-            Registers[0xF] = Registers[x] >> 7 != 0 ? (byte) 0x1 : (byte) 0x0;
         }
 
         [Instruction("8xy7")]
@@ -201,8 +203,8 @@ namespace Chroma8NeverDoneBefore.Chip
         {
             var x = (byte) ((instruction & 0x0F00) >> 8);
             var y = (byte) ((instruction & 0x00F0) >> 4);
-            Registers[x] = (byte) (Registers[y] - Registers[x]);
             Registers[0xF] = Registers[y] > Registers[x] ? (byte) 0x1 : (byte) 0x0;
+            Registers[x] = (byte) (Registers[y] - Registers[x]);
         }
 
         [Instruction("8xyE")]
@@ -210,8 +212,8 @@ namespace Chroma8NeverDoneBefore.Chip
         {
             var x = (byte) ((instruction & 0x0F00) >> 8);
             var y = (byte) ((instruction & 0x00F0) >> 4);
-            Registers[x] = (byte) (Registers[x] * 2);
             Registers[0xF] = Registers[x] >> 7 != 0 ? (byte) 0x1 : (byte) 0x0;
+            Registers[x] = (byte) (Registers[x] * 2);
         }
 
         [Instruction("9xy0")]
@@ -230,7 +232,7 @@ namespace Chroma8NeverDoneBefore.Chip
         }
 
         [Instruction("Bnnn")]
-        public void LoadAddAddress(ushort instruction)
+        public void AddMemAddress(ushort instruction)
         {
             MemRegister = (ushort) ((ushort) (instruction & 0x0FFF) + Registers[0]);
         }
@@ -249,6 +251,82 @@ namespace Chroma8NeverDoneBefore.Chip
                 (byte) ((instruction & 0x00F0) >> 4),
                 (byte) (instruction & 0x000F)
             );
+        }
+
+        [Instruction("Ex9E")]
+        public void SkipIfPressed(ushort instruction)
+        {
+            if (_context.Input.IsKeyDown(Registers[(byte) ((instruction & 0x0F00) >> 8)]))
+                ProgramCounter += 2;
+        }
+
+        [Instruction("ExA1")]
+        public void SkipIfNotPressed(ushort instruction)
+        {
+            if (_context.Input.IsKeyUp(Registers[(byte) ((instruction & 0x0F00) >> 8)]))
+                ProgramCounter += 2;
+        }
+
+        [Instruction("Fx07")]
+        public void LoadDelayTimer(ushort instruction)
+        {
+            Registers[(byte) ((instruction & 0x0F00) >> 8)] = _context.Audio.DelayTimer;
+        }
+
+        [Instruction("Fx0A")]
+        public void WaitForKey(ushort instruction)
+        {
+            Registers[(byte) ((instruction & 0x0F00) >> 8)] = _context.Input.WaitForAnyKey();
+        }
+
+        [Instruction("Fx15")]
+        public void SetDelayTimer(ushort instruction)
+        {
+            _context.Audio.DelayTimer = Registers[(byte) ((instruction & 0x0F00) >> 8)];
+        }
+
+        [Instruction("Fx18")]
+        public void SetSoundTimer(ushort instruction)
+        {
+            _context.Audio.SoundTimer = Registers[(byte) ((instruction & 0x0F00) >> 8)];
+        }
+
+        [Instruction("Fx1E")]
+        public void AddMemRegister(ushort instruction)
+        {
+            MemRegister += Registers[(byte) ((instruction & 0x0F00) >> 8)];
+        }
+
+        [Instruction("Fx29")]
+        public void SetFontAddress(ushort instruction)
+        {
+            MemRegister = (ushort) (DefaultFont.FontOffset + DefaultFont.FontSize * Registers[(byte) ((instruction & 0x0F00) >> 8)]);
+        }
+
+        [Instruction("Fx33")]
+        public void WriteBcdToMemory(ushort instruction)
+        {
+            int reg = Registers[(byte) ((instruction & 0x0F00) >> 8)];
+            var digits = reg.GetDigits().ToArray();
+            _context.Memory.SetRange(MemRegister, digits);
+        }
+
+        [Instruction("Fx55")]
+        public void WriteRegistersToMemory(ushort instruction)
+        {
+            var end = ((instruction & 0x0F00) >> 8) + 1;
+            byte[] bytes = Registers[..end];
+            _context.Memory.SetRange(MemRegister, bytes);
+        }
+
+        [Instruction("Fx65")]
+        public void ReadMemoryToRegisters(ushort instruction)
+        {
+            var end = (instruction & 0x0F00) >> 8;
+            for (var i = 0; i <= end; i++)
+            {
+                Registers[i] = _context.Memory.Read((ushort) (MemRegister + i));
+            }
         }
     }
 }
