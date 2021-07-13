@@ -40,25 +40,22 @@ namespace Chroma8NeverDoneBefore.Chip.Graphics
 
         public void DrawSprite(byte rX, byte rY, byte n)
         {
-            var offsetX = _context.Processor.Registers[rX];
-            var offsetY = _context.Processor.Registers[rY];
-            var collision = false;
-            for (var y = 0; y < n; y++)
+            _context.Processor.Registers[0xF] = 0x00;
+            for (int y = rY; y < rY + n; y++)
             {
-                var line = _context.Memory.Read((ushort) (_context.Processor.MemRegister + y));
-                for (var x = 0; x < 8; x++)
+                var line = _context.Memory.Read((ushort) (_context.Processor.MemRegister + (y - rY)));
+                for (int x = rX; x < rX + 8; x++)
                 {
-                    var posX = (offsetX + x) % ScreenWidth;
-                    var posY = (offsetY + y) % ScreenHeight;
+                    var posX = x % ScreenWidth;
+                    var posY = y % ScreenHeight;
                     var old = FrameBuffer[posX, posY];
-                    var value = ((line << x) & 0x80) != 0;
+                    var value = ((line << (x - rX)) & 0x80) != 0;
                     FrameBuffer[posX, posY] ^= value;
                     if (old && !FrameBuffer[posX, posY])
-                        collision = true;
+                        _context.Processor.Registers[0xF] = 0x01;
                 }
             }
 
-            _context.Processor.Registers[0xF] = (byte) (collision ? 0x01 : 0x00);
         }
     }
 }

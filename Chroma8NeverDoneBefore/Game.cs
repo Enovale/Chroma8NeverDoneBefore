@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Numerics;
 using Chroma;
 using Chroma.Audio;
@@ -13,11 +14,11 @@ namespace Chroma8NeverDoneBefore
         private readonly RenderTarget _target;
         private readonly Chip8 _system;
         private readonly Waveform _tone;
-        
+
         public Game(GameStartupOptions options = null) : base(options)
         {
             _system = new Chip8(new ChromaPlatform());
-            _system.LoadFile(@"D:\Documents\GitHub\Chroma8NeverDoneBefore\Chroma8NeverDoneBefore\ROMs\brix.ch8");
+            _system.LoadFile(@"D:\Documents\GitHub\Chroma8NeverDoneBefore\Chroma8NeverDoneBefore\ROMs\pong.ch8");
             _target = new RenderTarget((int) _system.Renderer.ScreenWidth, (int) _system.Renderer.ScreenHeight)
             {
                 FilteringMode = TextureFilteringMode.NearestNeighbor
@@ -28,25 +29,24 @@ namespace Chroma8NeverDoneBefore
         protected override void Draw(RenderContext context)
         {
             context.Clear(Color.Gray);
-            context.RenderTo(_target, () =>
+            for (var y = 0; y < _system.Renderer.FrameBuffer.GetLength(1); y++)
             {
-                for (var y = 0; y < _system.Renderer.FrameBuffer.GetLength(1); y++)
+                for (var x = 0; x < _system.Renderer.FrameBuffer.GetLength(0); x++)
                 {
-                    for (var x = 0; x < _system.Renderer.FrameBuffer.GetLength(0); x++)
-                    {
-                        context.Pixel(new Vector2(x + 0.5f, y + 0.5f), _system.Renderer.FrameBuffer[x, y] ? Color.White : Color.Black);
-                    }
+                    _target[x, y] = _system.Renderer.FrameBuffer[x, y] ? Color.White : Color.Black;
                 }
-            });
+            }
+
+            _target.Flush();
             context.DrawTexture(_target, Vector2.Zero, new Vector2(6, 6), Vector2.Zero, 0);
         }
 
         protected override void Update(float delta)
         {
             _system.Update(delta);
-            if(_system.Audio.PlayTone && !_tone.IsPlaying)
+            if (_system.Audio.PlayTone && !_tone.IsPlaying)
                 _tone.Play();
-            else if(!_system.Audio.PlayTone && _tone.IsPlaying)
+            else if (!_system.Audio.PlayTone && _tone.IsPlaying)
                 _tone.Pause();
         }
 

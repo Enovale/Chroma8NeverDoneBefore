@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Linq;
 using System.Reflection;
 using Chroma8NeverDoneBefore.Chip.Graphics;
@@ -17,10 +18,16 @@ namespace Chroma8NeverDoneBefore.Chip
 
         private Random _rand;
         private Chip8 _context;
+        private MethodInfo[] _methods;
 
         public Processor(Chip8 context)
         {
             _context = context;
+
+            _methods = this.GetType().GetMethods(BindingFlags.Public
+                                                 | BindingFlags.NonPublic
+                                                 | BindingFlags.Instance
+                                                 | BindingFlags.Static);
         }
 
         public void Initialize(ushort PcStart = 0x000)
@@ -35,17 +42,10 @@ namespace Chroma8NeverDoneBefore.Chip
         public void Clock()
         {
             var instruction = _context.Memory.ReadUShort(ProgramCounter);
-            // Make sure we're always working with big endian
-            instruction = (BitConverter.IsLittleEndian ? instruction.SwapBytes() : instruction);
 
             // I hate this a lot again
             var str = instruction.ToString("X4");
-
-            var methods = this.GetType().GetMethods(BindingFlags.Public
-                                                    | BindingFlags.NonPublic
-                                                    | BindingFlags.Instance
-                                                    | BindingFlags.Static);
-            foreach (var info in methods)
+            foreach (var info in _methods)
             {
                 if (info.GetCustomAttribute(typeof(InstructionAttribute)) is InstructionAttribute attr)
                 {
@@ -92,7 +92,7 @@ namespace Chroma8NeverDoneBefore.Chip
             ProgramCounter = (ushort) (instruction & 0x0FFF);
         }
 
-        [Instruction("2nnn")]
+        [Instruction("2nnn", false)]
         public void CallSubroutine(ushort instruction)
         {
             StackPointer++;
@@ -247,8 +247,8 @@ namespace Chroma8NeverDoneBefore.Chip
         public void DrawSprite(ushort instruction)
         {
             _context.Renderer.DrawSprite(
-                (byte) ((instruction & 0x0F00) >> 8),
-                (byte) ((instruction & 0x00F0) >> 4),
+                Registers[(byte) ((instruction & 0x0F00) >> 8)],
+                Registers[(byte) ((instruction & 0x00F0) >> 4)],
                 (byte) (instruction & 0x000F)
             );
         }
